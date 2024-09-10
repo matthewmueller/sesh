@@ -10,10 +10,9 @@ type Codec interface {
 	Decode(data []byte, v any) error
 }
 
-type gobCodec struct {
-}
+type gobCodec struct{}
 
-func (g *gobCodec) Encode(v any) ([]byte, error) {
+func (gobCodec) Encode(v any) ([]byte, error) {
 	b := new(bytes.Buffer)
 	enc := gob.NewEncoder(b)
 	if err := enc.Encode(v); err != nil {
@@ -22,7 +21,7 @@ func (g *gobCodec) Encode(v any) ([]byte, error) {
 	return b.Bytes(), nil
 }
 
-func (g *gobCodec) Decode(data []byte, v any) error {
+func (gobCodec) Decode(data []byte, v any) error {
 	b := bytes.NewBuffer(data)
 	dec := gob.NewDecoder(b)
 	if err := dec.Decode(v); err != nil {

@@ -7,7 +7,10 @@ import (
 )
 
 func newMemoryStore() *memoryStore {
-	return &memoryStore{sync.Mutex{}, map[string]memorySession{}}
+	return &memoryStore{
+		sync.Mutex{},
+		map[string]memorySession{},
+	}
 }
 
 // memoryStore is the default session store

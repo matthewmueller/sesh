@@ -2,7 +2,7 @@
 
 [![Go Reference](https://pkg.go.dev/badge/github.com/matthewmueller/sesh.svg)](https://pkg.go.dev/github.com/matthewmueller/sesh)
 
-A minimal but feature-rich HTTP router for Go. A viable alternative to [gorilla/mux](http://github.com/gorilla/mux).
+A minimal, type-safe, pluggable session manager for Go. A viable alternative to [gorilla/sessions](http://github.com/gorilla/sessions).
 
 ## Features
 

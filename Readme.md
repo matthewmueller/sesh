@@ -11,12 +11,6 @@ A minimal, type-safe, pluggable session manager for Go. A viable alternative to 
 - Pluggable session storage
 - Doesn't break `http.Flusher`
 
-## Install
-
-```sh
-go get github.com/matthewmueller/sesh
-```
-
 ## Example
 
 ```go
@@ -68,6 +62,12 @@ handler := sessions.Middleware(router)
 
 // Listen on :8080
 http.ListenAndServe(":8080", handler)
+```
+
+## Install
+
+```sh
+go get github.com/matthewmueller/sesh
 ```
 
 ## FAQ

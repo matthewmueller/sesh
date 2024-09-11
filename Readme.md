@@ -186,17 +186,17 @@ I thought I'd miss this capability, but it turns out you get a lot of nice featu
 - Clear all sessions (e.g. log everyone out)
 - Manipulate sessions outside of HTTP (e.g. workers)
 
-## Contributors
+## Thanks
+
+- Alex Edwards ([@alexedwards](https://github.com/alexedwards)) for creating [scs](https://github.com/alexedwards/scs), which was a big inspiration for this project.
+
+## Contributions
 
 We welcome all contributions! Pull requests, bug reports and features requests are all appreciated.
 
 If you have an idea or are unsure how to contribute, open an issue!
 
-## Thanks
-
-- Alex Edwards ([@alexedwards](https://github.com/alexedwards)) for creating [scs](https://github.com/alexedwards/scs), which was a big inspiration for this project.
-
-## Author
+## Contributors
 
 - Matt Mueller ([@mattmueller](https://twitter.com/mattmueller))
 

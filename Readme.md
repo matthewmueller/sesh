@@ -80,7 +80,7 @@ func Handler(w http.ResponseWriter, r *http.Request) {
 }
 ```
 
-Here's what that looks like in sesh:
+Here's what that looks like in sesh. You'll notice a bit less verbosity, along with not needing to save the session at the end:
 
 ```go
 type Data struct {
@@ -97,13 +97,9 @@ func Handler(w http.ResponseWriter, r *http.Request) {
   session.FortyTwo = 42
 ```
 
-You'll notice a bit less verbosity, along with not needing to save the session at the end.
-
 ### How does this library compare to [alexedwards/scs](https://github.com/alexedwards/scs)?
 
-Sesh was a successful experiment in trying get a type-safe session store. I also wanted a smaller API surface.
-
-As with [gorilla/sessions](https://github.com/gorilla/sessions), scs is much more battle-tested and has a larger set of session stores.
+Sesh was a successful experiment in trying get a type-safe session store. I also wanted a smaller API surface. As with [gorilla/sessions](https://github.com/gorilla/sessions), scs is much more battle-tested and has a larger set of session stores.
 
 The libraries share a similar API:
 
@@ -179,9 +175,11 @@ I thought I'd miss this capability, but it turns out you get a lot of nice featu
 
 We welcome all contributions! Pull requests, bug reports and features requests are all appreciated.
 
+If you have an idea or are unsure how to contribute, open an issue!
+
 ## Thanks
 
-- Alex Edwards ([@alexedwards](https://github.com/alexedwards)) for creating [scs](https://github.com/alexedwards/scs), which was a big inspiration for this library. Some of the code even comes from [scs](https://github.com/alexedwards/scs)!
+- Alex Edwards ([@alexedwards](https://github.com/alexedwards)) for creating [scs](https://github.com/alexedwards/scs), which was a big inspiration for this project.
 
 ## Author
 

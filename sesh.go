@@ -11,6 +11,7 @@ import (
 	"github.com/matthewmueller/httpbuf"
 )
 
+// New session manager
 func New[Data any]() *Manager[Data] {
 	return &Manager[Data]{
 		Cookie: &Cookie{
@@ -31,6 +32,7 @@ func New[Data any]() *Manager[Data] {
 	}
 }
 
+// Manager manages sessions
 type Manager[Data any] struct {
 	Cookie *Cookie
 	Store  Store
@@ -47,8 +49,9 @@ type Manager[Data any] struct {
 	Generate func() (string, error)
 }
 
+// Load the session from the store
 func (m *Manager[Data]) Load(ctx context.Context, id string) (*Session[*Data], error) {
-	raw, expiry, err := m.Store.Load(ctx, id)
+	raw, expiry, err := m.Store.Find(ctx, id)
 	if err != nil {
 		return nil, err
 	}
@@ -106,6 +109,7 @@ func (m *Manager[Data]) prepareSession(session *Session[*Data]) (err error) {
 	return nil
 }
 
+// Save the session to the store
 func (m *Manager[Data]) Save(ctx context.Context, session *Session[*Data]) (err error) {
 	if err := m.prepareSession(session); err != nil {
 		return err
@@ -118,9 +122,10 @@ func (m *Manager[Data]) save(ctx context.Context, session *Session[*Data]) (err 
 	if err != nil {
 		return err
 	}
-	return m.Store.Save(ctx, session.ID, raw, session.Expiry)
+	return m.Store.Upsert(ctx, session.ID, raw, session.Expiry)
 }
 
+// Delete the session from the store
 func (m *Manager[Data]) Delete(ctx context.Context, id string) (err error) {
 	return m.Store.Delete(ctx, id)
 }
@@ -133,20 +138,22 @@ func errorHandler(w http.ResponseWriter, r *http.Request, err error) {
 	http.Error(w, err.Error(), http.StatusInternalServerError)
 }
 
+// Middleware for loading and saving sessions
 func (m *Manager[Data]) Middleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		session, err := m.LoadFrom(r)
+		session, err := m.Read(r)
 		if err != nil {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
+			m.ErrorHandler(w, r, err)
 			return
 		}
 		r = r.WithContext(context.WithValue(r.Context(), sessionKey, session))
 		rw := httpbuf.Wrap(w)
-		defer rw.Flush()
 		next.ServeHTTP(rw, r)
-		if err := m.SaveTo(w, r, session); err != nil {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
+		if err := m.Write(w, r, session); err != nil {
+			m.ErrorHandler(w, r, err)
+			return
 		}
+		rw.Flush()
 	})
 }
 
@@ -161,7 +168,8 @@ type ResponseWriter interface {
 	Header() http.Header
 }
 
-func (m *Manager[Data]) LoadFrom(r Request) (session *Session[*Data], err error) {
+// Read the session from the request
+func (m *Manager[Data]) Read(r Request) (session *Session[*Data], err error) {
 	if session, ok := r.Context().Value(sessionKey).(*Session[*Data]); ok {
 		return session, nil
 	}
@@ -175,7 +183,8 @@ func (m *Manager[Data]) LoadFrom(r Request) (session *Session[*Data], err error)
 	return m.Load(r.Context(), cookie.Value)
 }
 
-func (m *Manager[Data]) SaveTo(w ResponseWriter, r Request, session *Session[*Data]) (err error) {
+// Write the session to the response
+func (m *Manager[Data]) Write(w ResponseWriter, r Request, session *Session[*Data]) (err error) {
 	if err := m.prepareSession(session); err != nil {
 		return err
 	}
@@ -196,10 +205,13 @@ func (m *Manager[Data]) SaveTo(w ResponseWriter, r Request, session *Session[*Da
 	return nil
 }
 
-func (m *Manager[Data]) From(r Request) (session *Data) {
+// Session returns the session data from the request
+func (m *Manager[Data]) Session(r Request) (session *Data) {
 	s, ok := r.Context().Value(sessionKey).(*Session[*Data])
 	if !ok {
 		return new(Data)
 	}
 	return s.Data
 }
+
+// func (m *Manager)

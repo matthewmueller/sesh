@@ -30,6 +30,8 @@ github.com/matthewmueller/diff v0.0.3 h1:HNtVWIW/9mbM+7CKGW+k/tUr9ClFBO4Le+kS/5n
 github.com/matthewmueller/diff v0.0.3/go.mod h1:8V0QzU6IE7fmlOlE7NtXAeMkjB8cI9Cx4b1B7LNrz2U=
 github.com/matthewmueller/httpbuf v0.0.2 h1:2cjIXqKLw/WNbX/SqZfr8svxobsa/byqqlzcSuwmjjc=
 github.com/matthewmueller/httpbuf v0.0.2/go.mod h1:vXo3InwuLx0+T7xD6N3y34+MvIYWyisnFSK1wA+Z5DE=
+github.com/mattn/go-sqlite3 v1.14.23 h1:gbShiuAP1W5j9UOksQ06aiiqPMxYecovVGwmTxWtuw0=
+github.com/mattn/go-sqlite3 v1.14.23/go.mod h1:Uh1q+B4BYcTPb+yiD3kU8Ct7aC0hY9fxUwlHK0RXw+Y=
 github.com/pkg/diff v0.0.0-20210226163009-20ebb0f2a09e/go.mod h1:pJLUxLENpZxwdsKMEsNbx1VGcRFpLqf3715MtcvvzbA=
 github.com/pmezard/go-difflib v1.0.0 h1:4DBwDE0NGyQoBHbLQYPwSUPoCMWR5BEzIk/f1lZbAQM=
 github.com/pmezard/go-difflib v1.0.0/go.mod h1:iKH77koFhYxTK1pcRnkKkqfTogsbg7gZNVY4sRDYZ/4=

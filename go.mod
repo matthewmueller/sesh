@@ -6,6 +6,7 @@ require (
 	github.com/matryer/is v1.4.1
 	github.com/matthewmueller/diff v0.0.3
 	github.com/matthewmueller/httpbuf v0.0.2
+	github.com/mattn/go-sqlite3 v1.14.23
 	golang.org/x/sync v0.8.0
 )
 

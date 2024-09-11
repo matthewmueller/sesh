@@ -2,6 +2,8 @@ package sesh_test
 
 import (
 	"bytes"
+	"context"
+	"errors"
 	"net/http"
 	"net/http/cookiejar"
 	"net/http/httptest"
@@ -13,6 +15,7 @@ import (
 	"github.com/matryer/is"
 	"github.com/matthewmueller/diff"
 	"github.com/matthewmueller/sesh"
+	"github.com/matthewmueller/sesh/mockstore"
 	"golang.org/x/sync/errgroup"
 )
 
@@ -66,6 +69,42 @@ func TestSetGetCookie(t *testing.T) {
 	`)
 }
 
+func ExampleSession() {
+	type User struct {
+		ID   int    `json:"id"`
+		Name string `json:"name"`
+	}
+	type Data struct {
+		User *User
+	}
+	sessions := sesh.New[Data]()
+	router := http.NewServeMux()
+
+	// Login a user
+	router.HandleFunc("POST /sessions", func(w http.ResponseWriter, r *http.Request) {
+		session := sessions.Session(r)
+		// Assumes we've loaded and authenticated the user
+		session.User = &User{
+			ID:   1,
+			Name: "Alice",
+		}
+		http.Redirect(w, r, "/", http.StatusFound)
+	})
+
+	// Show the user if they're logged in
+	router.HandleFunc("GET /", func(w http.ResponseWriter, r *http.Request) {
+		session := sessions.Session(r)
+		if session.User != nil {
+			w.Write([]byte("Welcome " + session.User.Name))
+			return
+		}
+		w.Write([]byte("Welcome!"))
+	})
+
+	handler := sessions.Middleware(router)
+	http.ListenAndServe(":8080", handler)
+}
+
 func TestSession(t *testing.T) {
 	is := is.New(t)
 	jar, err := cookiejar.New(nil)
@@ -79,7 +118,7 @@ func TestSession(t *testing.T) {
 		return "random_id", nil
 	}
 	handler := sessions.Middleware(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		session := sessions.From(r)
+		session := sessions.Session(r)
 		session.Visits++
 		w.Write([]byte(strconv.Itoa(session.Visits)))
 	}))
@@ -117,7 +156,7 @@ func TestConcurrency(t *testing.T) {
 	sessions := sesh.New[Data]()
 	sessions.Now = futureDate
 	handler := sessions.Middleware(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		session := sessions.From(r)
+		session := sessions.Session(r)
 		session.Visits++
 		w.Write([]byte(strconv.Itoa(session.Visits)))
 	}))
@@ -197,7 +236,7 @@ func TestSessionNested(t *testing.T) {
 		return "random_id", nil
 	}
 	handler := sessions.Middleware(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		session := sessions.From(r)
+		session := sessions.Session(r)
 		switch session.Visits {
 		case 0:
 			session.Visits++
@@ -277,7 +316,7 @@ func TestDelete(t *testing.T) {
 		return "random_id", nil
 	}
 	handler := sessions.Middleware(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		session := sessions.From(r)
+		session := sessions.Session(r)
 		switch session.Visits {
 		case 0:
 			session.Visits++
@@ -330,11 +369,11 @@ func TestFlash(t *testing.T) {
 	mux.Handle("/", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		switch r.Method {
 		case http.MethodPost:
-			session := sessions.From(r)
+			session := sessions.Session(r)
 			session.Flashes = append(session.Flashes, "validation error")
 			http.Redirect(w, r, "/", http.StatusSeeOther)
 		case http.MethodGet:
-			session := sessions.From(r)
+			session := sessions.Session(r)
 			for _, flash := range session.Flashes {
 				w.Write([]byte(flash))
 			}
@@ -363,5 +402,89 @@ func TestFlash(t *testing.T) {
 		HTTP/1.1 200 OK
 		Connection: close
 		Set-Cookie: sid=random_id; Path=/; Expires=Mon, 08 Jan 2080 00:00:00 GMT; HttpOnly; SameSite=Lax
+	`)
+}
+
+func TestNil(t *testing.T) {
+	is := is.New(t)
+	jar, err := cookiejar.New(nil)
+	is.NoErr(err)
+	type Data struct {
+		Visits int
+	}
+	sessions := sesh.New[Data]()
+	sessions.Now = futureDate
+	sessions.Generate = func() (string, error) {
+		return "random_id", nil
+	}
+	handler := sessions.Middleware(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		session := sessions.Session(r)
+		session.Visits++
+		w.Write([]byte(strconv.Itoa(session.Visits)))
+		// Nil doesn't impact the session
+		session = nil
+	}))
+	req := httptest.NewRequest(http.MethodGet, "http://example.com/", nil)
+	equal(t, jar, handler, req, `
+		HTTP/1.1 200 OK
+		Connection: close
+		Set-Cookie: sid=random_id; Path=/; Expires=Mon, 08 Jan 2080 00:00:00 GMT; HttpOnly; SameSite=Lax
+
+		1
+	`)
+	req = httptest.NewRequest(http.MethodGet, "http://example.com/", nil)
+	equal(t, jar, handler, req, `
+		HTTP/1.1 200 OK
+		Connection: close
+		Set-Cookie: sid=random_id; Path=/; Expires=Mon, 08 Jan 2080 00:00:00 GMT; HttpOnly; SameSite=Lax
+
+		2
+	`)
+	req = httptest.NewRequest(http.MethodGet, "http://example.com/", nil)
+	equal(t, jar, handler, req, `
+		HTTP/1.1 200 OK
+		Connection: close
+		Set-Cookie: sid=random_id; Path=/; Expires=Mon, 08 Jan 2080 00:00:00 GMT; HttpOnly; SameSite=Lax
+
+		3
+	`)
+}
+
+func TestErrorHandler(t *testing.T) {
+	is := is.New(t)
+	jar, err := cookiejar.New(nil)
+	is.NoErr(err)
+	type Data struct {
+		Visits int
+	}
+	sessions := sesh.New[Data]()
+	sessions.Now = futureDate
+	sessions.Generate = func() (string, error) {
+		return "random_id", nil
+	}
+	mock := mockstore.New()
+	mock.MockUpsert = func(ctx context.Context, id string, data []byte, expiry time.Time) error {
+		return errors.New("oh noz")
+	}
+	sessions.Store = mock
+	called := 0
+	sessions.ErrorHandler = func(w http.ResponseWriter, r *http.Request, err error) {
+		called++
+		is.Equal(err.Error(), "oh noz")
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+	}
+	handler := sessions.Middleware(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		session := sessions.Session(r)
+		session.Visits++
+		w.Write([]byte(strconv.Itoa(session.Visits)))
+	}))
+	req := httptest.NewRequest(http.MethodGet, "http://example.com/", nil)
+	equal(t, jar, handler, req, `
+		HTTP/1.1 500 Internal Server Error
+		Connection: close
+		Content-Type: text/plain; charset=utf-8
+		X-Content-Type-Options: nosniff
+
+		oh noz
 	`)
 }

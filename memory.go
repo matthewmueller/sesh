@@ -33,7 +33,7 @@ func (s *memoryStore) Delete(_ context.Context, id string) error {
 	return nil
 }
 
-func (s *memoryStore) Load(_ context.Context, id string) (data []byte, expiry time.Time, err error) {
+func (s *memoryStore) Find(_ context.Context, id string) (data []byte, expiry time.Time, err error) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 	session, ok := s.sessions[id]
@@ -43,7 +43,7 @@ func (s *memoryStore) Load(_ context.Context, id string) (data []byte, expiry ti
 	return session.data, session.expiry, nil
 }
 
-func (s *memoryStore) Save(_ context.Context, id string, data []byte, expiry time.Time) error {
+func (s *memoryStore) Upsert(_ context.Context, id string, data []byte, expiry time.Time) error {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 	s.sessions[id] = memorySession{data, expiry}

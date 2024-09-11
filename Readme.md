@@ -70,6 +70,14 @@ http.ListenAndServe(":8080", handler)
 go get github.com/matthewmueller/sesh
 ```
 
+## Stores
+
+- **Memory:** By default sesh initializes an in-memory store. These sessions will last until your server is restart.
+- **SQLite 3:** [sqstore](./sqstore/) contains a SQLite 3 implementation for storing sessions in SQLite.
+- **Mock:** [mockstore](./mockstore/) contains a mockable storage. This is primarily used for testing.
+
+Missing a [Store](store.go)? Open a [PR](https://github.com/matthewmueller/sesh/pulls)!
+
 ## FAQ
 
 ### How does this compare to [gorilla/sessions](https://github.com/gorilla/sessions)?

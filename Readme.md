@@ -70,7 +70,7 @@ http.ListenAndServe(":8080", handler)
 go get github.com/matthewmueller/sesh
 ```
 
-## Stores
+## Session Storage Plugins
 
 - **Memory:** By default sesh initializes an in-memory store. These sessions will last until your server is restart.
 - **SQLite 3:** [sqstore](./sqstore/) contains a SQLite 3 implementation for storing sessions in SQLite.

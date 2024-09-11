@@ -27,31 +27,46 @@ type User struct {
 type Data struct {
   User *User
 }
+
+// Initialize the session manager
 sessions := sesh.New[Data]()
+
+// Setup the router
 router := http.NewServeMux()
 
 // Login a user
 router.HandleFunc("POST /sessions", func(w http.ResponseWriter, r *http.Request) {
+  // Get the session from context
   session := sessions.Session(r)
+
   // Assumes we've loaded and authenticated the user
   session.User = &User{
     ID:   1,
     Name: "Alice",
   }
+
   http.Redirect(w, r, "/", http.StatusFound)
 })
 
 // Show the user if they're logged in
 router.HandleFunc("GET /", func(w http.ResponseWriter, r *http.Request) {
+  // Get the session from context
   session := sessions.Session(r)
+
+  // Logged in state
   if session.User != nil {
     w.Write([]byte("Welcome " + session.User.Name))
     return
   }
+
+  // Logged out state
   w.Write([]byte("Welcome!"))
 })
 
+// Automatically find and update the session on each request
 handler := sessions.Middleware(router)
+
+// Listen on :8080
 http.ListenAndServe(":8080", handler)
 ```
 

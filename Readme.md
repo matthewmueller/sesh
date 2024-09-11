@@ -103,7 +103,7 @@ You'll notice a bit less verbosity, along with not needing to save the session a
 
 Sesh was a successful experiment in trying get a type-safe session store. I also wanted a smaller API surface.
 
-As with [gorilla/sessions](https://github.com/gorilla/sessions), scs is much more battle-tested and has a large
+As with [gorilla/sessions](https://github.com/gorilla/sessions), scs is much more battle-tested and has a larger set of session stores.
 
 The libraries share a similar API:
 

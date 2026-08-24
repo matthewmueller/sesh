@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/jackc/pgx/v5/pgconn"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/matthewmueller/sesh"
 )
@@ -84,7 +85,12 @@ func (s *Store) Cleanup(ctx context.Context) error {
 
 // Reset removes all sessions from the store.
 func (s *Store) Reset(ctx context.Context) error {
-	const sql = `DELETE FROM %[1]s`
+	const sql = `TRUNCATE TABLE %[1]s`
 	_, err := s.db.Exec(ctx, fmt.Sprintf(sql, s.Table))
+	// Ignore error if the table does not exist
+	var pgErr *pgconn.PgError
+	if errors.As(err, &pgErr) && pgErr.Code == "42P01" {
+		return nil
+	}
 	return err
 }

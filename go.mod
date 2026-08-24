@@ -1,14 +1,14 @@
 module github.com/matthewmueller/sesh
 
-go 1.23.0
+go 1.25.0
 
 require (
 	github.com/jackc/pgx/v5 v5.7.3
 	github.com/matryer/is v1.4.1
 	github.com/matthewmueller/diff v0.0.3
-	github.com/matthewmueller/httpbuf v0.0.2
+	github.com/matthewmueller/httpbuf v0.0.3
 	github.com/mattn/go-sqlite3 v1.14.23
-	golang.org/x/sync v0.10.0
+	golang.org/x/sync v0.22.0
 )
 
 require (
@@ -22,8 +22,8 @@ require (
 	github.com/sergi/go-diff v1.0.0 // indirect
 	github.com/shurcooL/go-goon v0.0.0-20170922171312-37c2f522c041 // indirect
 	golang.org/x/crypto v0.31.0 // indirect
-	golang.org/x/mod v0.17.0 // indirect
+	golang.org/x/mod v0.39.0 // indirect
 	golang.org/x/text v0.21.0 // indirect
-	golang.org/x/tools v0.21.1-0.20240508182429-e35e4ccd0d2d // indirect
+	golang.org/x/tools v0.49.0 // indirect
 	mvdan.cc/gofumpt v0.2.0 // indirect
 )

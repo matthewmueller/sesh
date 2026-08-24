@@ -1,3 +1,8 @@
+# 0.0.4 / 2026-08-23
+
+- add support for hijacking requests for websockets
+- fix reset when the table doesn't exist
+
 # 0.0.3 / 2025-03-22
 
 - add pgxstore support for a postgres session-based store

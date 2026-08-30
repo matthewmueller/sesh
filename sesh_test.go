@@ -82,7 +82,7 @@ func ExampleSession() {
 
 	// Login a user
 	router.HandleFunc("POST /sessions", func(w http.ResponseWriter, r *http.Request) {
-		session := sessions.Session(r)
+		session := sessions.FromRequest(r)
 		// Assumes we've loaded and authenticated the user
 		session.User = &User{
 			ID:   1,
@@ -93,7 +93,7 @@ func ExampleSession() {
 
 	// Show the user if they're logged in
 	router.HandleFunc("GET /", func(w http.ResponseWriter, r *http.Request) {
-		session := sessions.Session(r)
+		session := sessions.FromRequest(r)
 		if session.User != nil {
 			w.Write([]byte("Welcome " + session.User.Name))
 			return
@@ -118,7 +118,7 @@ func TestSession(t *testing.T) {
 		return "random_id", nil
 	}
 	handler := sessions.Middleware(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		session := sessions.Session(r)
+		session := sessions.FromRequest(r)
 		session.Visits++
 		w.Write([]byte(strconv.Itoa(session.Visits)))
 	}))
@@ -156,7 +156,7 @@ func TestConcurrency(t *testing.T) {
 	sessions := sesh.New[Data]()
 	sessions.Now = futureDate
 	handler := sessions.Middleware(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		session := sessions.Session(r)
+		session := sessions.FromRequest(r)
 		session.Visits++
 		w.Write([]byte(strconv.Itoa(session.Visits)))
 	}))
@@ -236,7 +236,7 @@ func TestSessionNested(t *testing.T) {
 		return "random_id", nil
 	}
 	handler := sessions.Middleware(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		session := sessions.Session(r)
+		session := sessions.FromRequest(r)
 		switch session.Visits {
 		case 0:
 			session.Visits++
@@ -316,7 +316,7 @@ func TestDelete(t *testing.T) {
 		return "random_id", nil
 	}
 	handler := sessions.Middleware(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		session := sessions.Session(r)
+		session := sessions.FromRequest(r)
 		switch session.Visits {
 		case 0:
 			session.Visits++
@@ -369,11 +369,11 @@ func TestFlash(t *testing.T) {
 	mux.Handle("/", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		switch r.Method {
 		case http.MethodPost:
-			session := sessions.Session(r)
+			session := sessions.FromRequest(r)
 			session.Flashes = append(session.Flashes, "validation error")
 			http.Redirect(w, r, "/", http.StatusSeeOther)
 		case http.MethodGet:
-			session := sessions.Session(r)
+			session := sessions.FromRequest(r)
 			for _, flash := range session.Flashes {
 				w.Write([]byte(flash))
 			}
@@ -418,7 +418,7 @@ func TestNil(t *testing.T) {
 		return "random_id", nil
 	}
 	handler := sessions.Middleware(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		session := sessions.Session(r)
+		session := sessions.FromRequest(r)
 		session.Visits++
 		w.Write([]byte(strconv.Itoa(session.Visits)))
 		// Nil doesn't impact the session
@@ -474,7 +474,7 @@ func TestErrorHandler(t *testing.T) {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 	}
 	handler := sessions.Middleware(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		session := sessions.Session(r)
+		session := sessions.FromRequest(r)
 		session.Visits++
 		w.Write([]byte(strconv.Itoa(session.Visits)))
 	}))

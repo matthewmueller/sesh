@@ -205,13 +205,16 @@ func (m *Manager[Data]) Write(w ResponseWriter, r Request, session *Session[*Dat
 	return nil
 }
 
-// Session returns the session data from the request
-func (m *Manager[Data]) Session(r Request) (session *Data) {
-	s, ok := r.Context().Value(sessionKey).(*Session[*Data])
+// From returns the session data from the context
+func (m *Manager[Data]) From(ctx context.Context) (session *Data) {
+	s, ok := ctx.Value(sessionKey).(*Session[*Data])
 	if !ok {
 		return new(Data)
 	}
 	return s.Data
 }
 
-// func (m *Manager)
+// FromRequest returns the session data from the request
+func (m *Manager[Data]) FromRequest(r Request) (session *Data) {
+	return m.From(r.Context())
+}

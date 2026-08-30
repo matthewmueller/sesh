@@ -31,7 +31,7 @@ router := http.NewServeMux()
 // Login a user
 router.HandleFunc("POST /sessions", func(w http.ResponseWriter, r *http.Request) {
   // Get the session from context
-  session := sessions.Session(r)
+  session := sessions.FromRequest(r)
 
   // Assumes we've loaded and authenticated the user
   session.User = &User{
@@ -45,7 +45,7 @@ router.HandleFunc("POST /sessions", func(w http.ResponseWriter, r *http.Request)
 // Show the user if they're logged in
 router.HandleFunc("GET /", func(w http.ResponseWriter, r *http.Request) {
   // Get the session from context
-  session := sessions.Session(r)
+  session := sessions.FromRequest(r)
 
   // Logged in state
   if session.User != nil {

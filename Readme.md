@@ -9,7 +9,7 @@ A minimal, type-safe, pluggable session manager for Go. A viable alternative to 
 - Type-safe, minimal API using Go 1.18+ Generics
 - Easy-to-use middleware design
 - Pluggable session storage
-- Doesn't break `http.Flusher`
+- Doesn't break websockets and server-sent events (SSE)
 
 ## Example
 

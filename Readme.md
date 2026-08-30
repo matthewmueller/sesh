@@ -72,10 +72,10 @@ go get github.com/matthewmueller/sesh
 
 ## Session Storage Plugins
 
-- **Memory:** Default in-memory store. These sessions will last until your server is restart.
-- **SQLite 3:** [pgxstore](./pgxstore/) PostgreSQL implementation for storing sessions using [pgx](https://github.com/jackc/pgx).
-- **SQLite 3:** [sqstore](./sqstore/) sqlite3 implementation for storing sessions in SQLite.
-- **Mock:** [mockstore](./mockstore/) Mockable storage. This is primarily used for testing.
+- memory: Default in-memory store. These sessions will last until your server is restart.
+- [pgxstore](./pgxstore/): PostgreSQL store using [pgx](https://github.com/jackc/pgx).
+- [sqstore](./sqstore/): SQLite store. Bring your own `*sql.DB`.
+- [mockstore](./mockstore/): Mockable store. Primarily used for testing.
 
 Missing a [Store](store.go)? Open a [PR](https://github.com/matthewmueller/sesh/pulls)!
 

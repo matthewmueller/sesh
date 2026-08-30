@@ -1,3 +1,8 @@
+# 0.1.0 / 2026-08-30
+
+- **BREAKING** changed: `Session(r)` to `FromRequest(r)`.
+- added: `From(ctx)`
+
 # 0.0.4 / 2026-08-23
 
 - add support for hijacking requests for websockets

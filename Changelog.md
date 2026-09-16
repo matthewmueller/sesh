@@ -1,3 +1,7 @@
+# 0.1.1 / 2026-09-16
+
+- add support for flash messages
+
 # 0.1.0 / 2026-08-30
 
 - **BREAKING** changed: `Session(r)` to `FromRequest(r)`.

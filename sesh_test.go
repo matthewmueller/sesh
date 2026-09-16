@@ -353,7 +353,7 @@ func TestDelete(t *testing.T) {
 	`)
 }
 
-func TestFlash(t *testing.T) {
+func TestCustomFlash(t *testing.T) {
 	is := is.New(t)
 	jar, err := cookiejar.New(nil)
 	is.NoErr(err)

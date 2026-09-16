@@ -13,7 +13,7 @@ import (
 
 // New session manager
 func New[Data any]() *Manager[Data] {
-	return &Manager[Data]{
+	m := &Manager[Data]{
 		Cookie: &Cookie{
 			Name:     "sid",
 			HttpOnly: true,
@@ -30,6 +30,10 @@ func New[Data any]() *Manager[Data] {
 		Generate:     generateRandom,
 		ErrorHandler: errorHandler,
 	}
+	m.Flash = &flashManager[Data]{
+		manager: m,
+	}
+	return m
 }
 
 // Manager manages sessions
@@ -37,6 +41,7 @@ type Manager[Data any] struct {
 	Cookie *Cookie
 	Store  Store
 	Codec  Codec
+	Flash  *flashManager[Data]
 
 	// ErrorHandler is called when an error occurs in the middleware
 	// Default is to return a 500 status code with the error message.
@@ -62,14 +67,15 @@ func (m *Manager[Data]) Load(ctx context.Context, id string) (*Session[*Data], e
 		return m.newSession(), nil
 	}
 	// Session data found, decode it
-	data := new(Data)
-	if err := m.Codec.Decode(raw, &data); err != nil {
+	p := payload[*Data]{Data: new(Data)}
+	if err := m.Codec.Decode(raw, &p); err != nil {
 		return nil, err
 	}
 	return &Session[*Data]{
-		ID:     id,
-		Data:   data,
-		Expiry: expiry,
+		ID:      id,
+		Data:    p.Data,
+		Expiry:  expiry,
+		current: p.Flashes,
 	}, nil
 }
 
@@ -84,6 +90,14 @@ type Session[Data any] struct {
 	ID     string // Will be empty if the session is new
 	Data   Data
 	Expiry time.Time
+
+	current Flashes
+	next    Flashes
+}
+
+type payload[Data any] struct {
+	Data    Data
+	Flashes Flashes
 }
 
 // generateRandom generates a random session ID.
@@ -118,7 +132,7 @@ func (m *Manager[Data]) Save(ctx context.Context, session *Session[*Data]) (err 
 }
 
 func (m *Manager[Data]) save(ctx context.Context, session *Session[*Data]) (err error) {
-	raw, err := m.Codec.Encode(session.Data)
+	raw, err := m.Codec.Encode(payload[*Data]{Data: session.Data, Flashes: session.next})
 	if err != nil {
 		return err
 	}
@@ -207,11 +221,16 @@ func (m *Manager[Data]) Write(w ResponseWriter, r Request, session *Session[*Dat
 
 // From returns the session data from the context
 func (m *Manager[Data]) From(ctx context.Context) (session *Data) {
-	s, ok := ctx.Value(sessionKey).(*Session[*Data])
+	s, ok := m.session(ctx)
 	if !ok {
 		return new(Data)
 	}
 	return s.Data
+}
+
+func (m *Manager[Data]) session(ctx context.Context) (*Session[*Data], bool) {
+	s, ok := ctx.Value(sessionKey).(*Session[*Data])
+	return s, ok
 }
 
 // FromRequest returns the session data from the request

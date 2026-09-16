@@ -11,6 +11,12 @@ A minimal, type-safe, pluggable session manager for Go. A viable alternative to 
 - Pluggable session storage
 - Doesn't break websockets and server-sent events (SSE)
 
+## Install
+
+```sh
+go get github.com/matthewmueller/sesh
+```
+
 ## Example
 
 ```go
@@ -64,11 +70,29 @@ handler := sessions.Middleware(router)
 http.ListenAndServe(":8080", handler)
 ```
 
-## Install
+## Flash messages
 
-```sh
-go get github.com/matthewmueller/sesh
+Use `sessions.Flash` inside session middleware to queue string values for the
+next request:
+
+```go
+sessions.Flash.Set(r, "notice", "Board created")
+sessions.Flash.Add(r, "error", "Name is required")
+http.Redirect(w, r, "/boards", http.StatusSeeOther)
 ```
+
+On the next request, `sessions.Flash.Get(r, "notice")` returns the first value.
+`sessions.Flash.All(r)` returns a deep copy of all current flashes; use
+`flashes.Values("error")` to read multiple values. Reads do not consume flashes.
+Current flashes expire when the request completes, even if they were never read.
+
+`Set` and `Add` queue values for the next request. `Del(r, key)` and `Clear(r)`
+remove pending values without changing the current request's flashes. Application
+session data needs no flash fields, and middleware handles persistence.
+
+The stored payload now wraps application data and flashes. Existing stored
+sessions from the previous format must be cleared when upgrading, and custom
+codecs must support encoding and decoding this wrapper.
 
 ## Session Storage Plugins
 

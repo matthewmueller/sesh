@@ -117,9 +117,10 @@ Current flashes expire when the request completes, even if they were never read.
 remove pending values without changing the current request's flashes. Application
 session data needs no flash fields, and middleware handles persistence.
 
-The stored payload now wraps application data and flashes. Existing stored
-sessions from the previous format must be cleared when upgrading, and custom
-codecs must support encoding and decoding this wrapper.
+The stored payload now wraps application data and flashes. With the default gob
+codec, sessions stored in the previous `Data` format are still loaded; their
+flashes start empty. Sessions that cannot be decoded in either format are reset.
+Custom codecs must support encoding and decoding the new wrapper.
 
 ## Session Storage Plugins
 

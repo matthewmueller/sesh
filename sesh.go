@@ -67,9 +67,17 @@ func (m *Manager[Data]) Load(ctx context.Context, id string) (*Session[*Data], e
 		return m.newSession(), nil
 	}
 	// Session data found, decode it
-	p := payload[*Data]{Data: new(Data)}
+	p := payload[*Data]{
+		Data: new(Data),
+	}
 	if err := m.Codec.Decode(raw, &p); err != nil {
-		return nil, err
+		data := new(Data)
+		if err := m.Codec.Decode(raw, data); err != nil {
+			return m.newSession(), nil
+		}
+		p = payload[*Data]{
+			Data: data,
+		}
 	}
 	return &Session[*Data]{
 		ID:      id,
@@ -95,6 +103,8 @@ type Session[Data any] struct {
 	next    Flashes
 }
 
+// Warning: changing the stored payload can make older sessions undecodable.
+// Adding new fields is safe.
 type payload[Data any] struct {
 	Data    Data
 	Flashes Flashes

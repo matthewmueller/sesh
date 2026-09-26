@@ -3,6 +3,7 @@ package sesh_test
 import (
 	"bytes"
 	"context"
+	"encoding/gob"
 	"errors"
 	"net/http"
 	"net/http/cookiejar"
@@ -146,6 +147,103 @@ func TestSession(t *testing.T) {
 
 		3
 	`)
+}
+
+func TestLoadLegacySession(t *testing.T) {
+	is := is.New(t)
+	type LegacyData struct {
+		Visits int
+	}
+	type Data struct {
+		Visits int
+		Name   string
+	}
+	sessions := sesh.New[Data]()
+	sessions.Now = futureDate
+	var raw bytes.Buffer
+	is.NoErr(gob.NewEncoder(&raw).Encode(LegacyData{Visits: 3}))
+	expiry := futureDate().Add(time.Hour)
+	is.NoErr(sessions.Store.Upsert(context.Background(), "legacy", raw.Bytes(), expiry))
+
+	session, err := sessions.Load(context.Background(), "legacy")
+	is.NoErr(err)
+	is.Equal(session.ID, "legacy")
+	is.Equal(session.Data.Visits, 3)
+	is.Equal(session.Data.Name, "")
+	is.Equal(session.Expiry, expiry)
+	is.NoErr(sessions.Save(context.Background(), session))
+	reloaded, err := sessions.Load(context.Background(), "legacy")
+	is.NoErr(err)
+	is.Equal(reloaded.Data.Visits, 3)
+}
+
+func TestLoadAddedDataField(t *testing.T) {
+	is := is.New(t)
+	type OldData struct {
+		Visits int
+	}
+	type Data struct {
+		Visits int
+		Name   string
+	}
+	sessions := sesh.New[Data]()
+	sessions.Now = futureDate
+	var raw bytes.Buffer
+	is.NoErr(gob.NewEncoder(&raw).Encode(struct {
+		Data    *OldData
+		Flashes sesh.Flashes
+	}{
+		Data: &OldData{Visits: 3},
+	}))
+	is.NoErr(sessions.Store.Upsert(context.Background(), "existing", raw.Bytes(), futureDate().Add(time.Hour)))
+
+	session, err := sessions.Load(context.Background(), "existing")
+	is.NoErr(err)
+	is.Equal(session.ID, "existing")
+	is.Equal(session.Data.Visits, 3)
+	is.Equal(session.Data.Name, "")
+}
+
+func TestGobPayloadAddedField(t *testing.T) {
+	is := is.New(t)
+	type Data struct {
+		Visits int
+	}
+	sessions := sesh.New[Data]()
+	raw, err := sessions.Codec.Encode(struct {
+		Data    *Data
+		Flashes sesh.Flashes
+	}{
+		Data:    &Data{Visits: 3},
+		Flashes: sesh.Flashes{"notice": {"saved"}},
+	})
+	is.NoErr(err)
+
+	var expanded struct {
+		Data    *Data
+		Flashes sesh.Flashes
+		Extra   string
+	}
+	is.NoErr(sessions.Codec.Decode(raw, &expanded))
+	is.Equal(expanded.Data.Visits, 3)
+	is.Equal(expanded.Flashes.Get("notice"), "saved")
+	is.Equal(expanded.Extra, "")
+}
+
+func TestLoadCorruptSession(t *testing.T) {
+	is := is.New(t)
+	type Data struct {
+		Visits int
+	}
+	sessions := sesh.New[Data]()
+	sessions.Now = futureDate
+	is.NoErr(sessions.Store.Upsert(context.Background(), "corrupt", []byte("invalid gob"), futureDate().Add(time.Hour)))
+
+	session, err := sessions.Load(context.Background(), "corrupt")
+	is.NoErr(err)
+	is.Equal(session.ID, "")
+	is.Equal(session.Data.Visits, 0)
+	is.Equal(session.Expiry, futureDate().Add(sessions.Cookie.ExpireIn))
 }
 
 func TestConcurrency(t *testing.T) {

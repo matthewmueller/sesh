@@ -70,6 +70,33 @@ handler := sessions.Middleware(router)
 http.ListenAndServe(":8080", handler)
 ```
 
+## Making authenticated requests outside of the Browser
+
+For HTTP calls to an app using `sesh.Middleware`, create a client with the
+session data the request should have. This is useful for calling authenticated
+webhook handlers, internal endpoints and impersonating users:
+
+```go
+client, err := sessions.Client(Data{
+  User: &User{
+    ID: 1,
+    Name: "Alice",
+  },
+})
+if err != nil {
+  return err
+}
+
+resp, err := client.Post(webhookURL, "application/json", strings.NewReader(`{"event":"updated"}`))
+if err != nil {
+  return err
+}
+defer resp.Body.Close()
+```
+
+For a custom `http.Client`, you can use `sessions.Transport(data)` to get the
+underlying `http.RoundTripper`.
+
 ## Flash messages
 
 Use `sessions.Flash` inside session middleware to queue string values for the

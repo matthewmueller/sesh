@@ -1,3 +1,7 @@
+# 0.1.3 / 2026-09-26
+
+- make codec decoding more resilient. create a new session if unable to decode.
+
 # 0.1.2 / 2026-09-26
 
 - implement support for making requests as a specific session

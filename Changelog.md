@@ -1,3 +1,7 @@
+# 0.1.2 / 2026-09-26
+
+- implement support for making requests as a specific session
+
 # 0.1.1 / 2026-09-16
 
 - add support for flash messages
